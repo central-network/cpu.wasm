@@ -1,5 +1,5 @@
 
-    (func $malloc<i32>i32
+    (func $malloc
         (param $byteLength i32)
         (result i32)
 
@@ -222,13 +222,13 @@
         )
     )
 
-    (func $set_concurrency<i32>
+    (func $set_ready_state<i32>
         (param $value i32)
         
         (apply $self.DataView:setUint32<i32.i32.i32>
             global($dataView)
             (param 
-                global($OFFSET_CONCURRENCY)
+                global($OFFSET_READY_STATE)
                 local($value)
                 true
             )
@@ -426,13 +426,13 @@
         )
     )
 
-    (func $get_concurrency<>i32
+    (func $get_ready_state<>i32
         (result $value i32)
         
         (apply $self.DataView:getUint32<i32.i32>i32
             global($dataView)
             (param 
-                global($OFFSET_CONCURRENCY)
+                global($OFFSET_READY_STATE)
                 true
             )
         )

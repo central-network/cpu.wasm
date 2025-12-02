@@ -1,7 +1,7 @@
 
     (table $func 10 funcref)
     
-    (func 
+    (func $add
         (export "add")
         (param  $source <TypedArray>)
         (param  $values <TypedArray>)
@@ -12,53 +12,56 @@
     )
 
     (func $calc
-        (param $func_index       i32)
-        (param $source  <TypedArray>)
-        (param $values  <TypedArray>)
-        (param $target  <TypedArray>)
-        (result $promise   <Promise>)
-        
-        (local $waitAsync ref)
-        (local $buffer_len i32)
-        (local $source_ptr i32)
-        (local $values_ptr i32)
-        (local $target_ptr i32)
+        (param  $func_index           i32)
+        (param  $source      <TypedArray>)
+        (param  $values      <TypedArray>)
+        (param  $target      <TypedArray>)
+        (result $promise        <Promise>)
+        (local  $promise        <Promise>)
 
-        (local.set $buffer_len $get_used_bytes<ref>i32(local($target)))
-        (local.set $source_ptr $get_byteoffset<ref>i32(local($source)))
-        (local.set $values_ptr $get_byteoffset<ref>i32(local($values)))
-        (local.set $target_ptr $get_byteoffset<ref>i32(local($target)))
+        (call $set_func_index<i32> local($func_index))        
+        (call $set_buffer_len<i32> $get_used_bytes<ref>i32(local($target)))
+        (call $set_source_ptr<i32> $get_byteoffset<ref>i32(local($source)))
+        (call $set_values_ptr<i32> $get_byteoffset<ref>i32(local($values)))
+        (call $set_target_ptr<i32> $get_byteoffset<ref>i32(local($target)))
 
-        (call $set_func_index<i32> local($func_index))
-        (call $set_buffer_len<i32> local($buffer_len))
-        (call $set_source_ptr<i32> local($source_ptr))
-        (call $set_values_ptr<i32> local($values_ptr))
-        (call $set_target_ptr<i32> local($target_ptr))
+        (local.set $promise 
+            (call $create_wait_promise<>ref)
+        )
 
-        (local.set $waitAsync
-            (call $self.Atomics.waitAsync<ref.i32.i32>ref
-                global($i32View)
-                global($INDEX_WINDOW_MUTEX)
-                i32(0)
+        (if (i32.eq $get_ready_state<>i32()
+                global($READY_STATE_OPEN)
+            ) 
+            (then
+                (call $set_active_workers<i32>
+                    (call $notify_worker_mutex<>i32)
+                )
             )
         )
 
-        (call $self.Atomics.store<ref.i32.i32>
-            global($i32View)
+        local($promise)
+    )
+
+    (func $notify_worker_mutex<>i32
+        (result $notifiedWorkerCount i32)
+
+        (call $self.Atomics.notify<ref.i32.i32>i32
+            global($i32View) 
             global($INDEX_WORKER_MUTEX)
-            i32(1)
+            (call $get_worker_count<>i32)
         )
+    )
 
-        (call $set_active_workers<i32>
-            (call $self.Atomics.notify<ref.i32.i32>i32
-                global($i32View)
-                global($INDEX_WORKER_MUTEX)
-                i32(1)
+    (func $create_wait_promise<>ref
+        (result ref)
+
+        (call $self.Reflect.get<ref.ref>ref
+            (call $self.Atomics.waitAsync<ref.i32.i32>ref
+                global($i32View) 
+                global($INDEX_WINDOW_MUTEX) 
+                false
             )
-        )
-
-        $self.Reflect.get<ref.ref>ref(
-            local($waitAsync) text('value')
+            text('value')
         )
     )
 
@@ -75,7 +78,7 @@
 
         (if (i32.eqz
                 (local.tee $BYTES_PER_ELEMENT 
-                    $self.Reflect.get<ref.ref>i32(
+                    (call $self.Reflect.get<ref.ref>i32
                         local($constructor)
                         text('BYTES_PER_ELEMENT')
                     )
@@ -94,16 +97,16 @@
         )
 
         (local.set $offset 
-            (call $malloc<i32>i32 
+            (call $malloc
                 local($byteLength)
             )
         )
 
         (call $set_array_type<i32.i32>
             local($offset) 
-            $self.Reflect.get<ref.ref>i32(
+            (call $self.Reflect.get<ref.ref>i32
                 local($constructor) 
-                global($symbol)
+                (call $get_self_symbol<>ref)
             )
         )
 
@@ -116,7 +119,7 @@
             new($self.Array<>ref)
         )
 
-        (apply $self.Array:push<ref> local($arguments) (param global($buffer)))
+        (apply $self.Array:push<ref> local($arguments) (param (call $get_buffer<>ref)))
         (apply $self.Array:push<i32> local($arguments) (param local($offset)))
         (apply $self.Array:push<i32> local($arguments) (param local($length)))
 

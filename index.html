@@ -1,56 +1,37 @@
-<meta charset="utf8" />
-<script type="module">
-    // Define exec function globally for WASM to call
-    self.exec = function (id, buffer, count) {
-        const int32 = new Int32Array(buffer);
+<script>
+    WebAssembly.instantiateStreaming(fetch("ipu.wasm"), self).then(async wasm => {
+        const ipu = wasm.instance.exports;
+        console.warn(ipu);
 
-        // Task ID is already written by mem.wat to Index 8 (0x20)
+        const source = ipu.new(Float32Array, 12);
+        const values = ipu.new(Float32Array, 12);
+        const target = ipu.new(Float32Array, 12);
+        const dwtest = ipu.new(DataView, 2440);
 
-        // Write Active Workers to Address 24 (Index 6)
-        Atomics.store(int32, 6, count);
+        console.table([
+            { view: source, offset: source.byteOffset, length: source.length, buffer: source.buffer },
+            { view: values, offset: values.byteOffset, length: values.length, buffer: values.buffer },
+            { view: target, offset: target.byteOffset, length: target.length, buffer: target.buffer },
+            { view: dwtest, offset: dwtest.byteOffset, length: dwtest.byteLength, buffer: dwtest.buffer },
+        ]);
 
-        // Notify Workers (Address 0 / Index 0)
-        Atomics.notify(int32, 10, count);
+        const call = ipu.add(source, values, target);
+        console.error("called:", call)
 
-        // Wait for Completion (Address 24 / Index 6)
-        return (async () => {
-            while (Atomics.load(int32, 6) > 0) {
-                const val = Atomics.load(int32, 6);
-                if (val === 0) break;
-                const { async, value } = Atomics.waitAsync(int32, 6, val);
-                if (async) {
-                    await value;
-                }
+        let ival;
+        ival = setInterval(async () => {
+            try {
+                const call = await ipu.add(source, values, target);
+                console.log("called:", call)
             }
-            return "done";
-        })();
-    };
+            catch {
+                clearInterval(ival)
+            }
+        }, 3000)
 
-    WebAssembly.instantiateStreaming(fetch("instance.wasm"), self).then(module => {
-        module.instance.exports.start().then(HURRA => {
-            self.HURRA = HURRA;
-            console.warn(HURRA)
 
-            const source = HURRA.new(Float32Array, 24);
-            const values = HURRA.new(Float32Array, 24);
-            const target = new Float32Array(24);
-
-            let i = 24;
-            while (i--) source[i] = Math.random();
-            values.fill(100)
-
-            console.log({
-                source, values, target
-            });
-
-            // Operations are now async because exec returns a Promise
-            (async () => {
-                const add = await HURRA.add(source, values);
-                console.log('ADD Result:', add);
-
-                const nearest = await HURRA.nearest(source, target);
-                console.log('NEAREST Result:', nearest);
-            })();
-        });
+        setTimeout(() => {
+            console.error(ipu.this.destroy())
+        }, 17500)
     });
 </script>

@@ -1,1 +1,0 @@
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --origin-to-force-quic-on=cen.net:4433 --ignore-certificate-errors-spki-list=IWldOkIdpLLzUXpVMDXZdTbrUHTAzpHVYndAXTWfWWU=

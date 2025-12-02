@@ -1,1 +1,0 @@
-python3 server.py /opt/homebrew/etc/nginx/cert.pem /opt/homebrew/etc/nginx/key.pem
