@@ -1,4 +1,3 @@
-(module
     ;; ============================================================================================================
     ;; CONSTANTS & OPCODES (BITWISE COMPOSITION)
     ;; ============================================================================================================
@@ -150,7 +149,7 @@
     (global $OFFSET_ZERO                           i32 (i32.const 0))
     (global $OFFSET_HEAP_PTR                       i32 (i32.const 4))
     (global $OFFSET_CAPACITY                       i32 (i32.const 8))
-    (global $OFFSET_MAX_PAGES                      i32 (i32.const 12))
+    (global $OFFSET_MAXLENGTH                      i32 (i32.const 12))
 
     ;; Block 1: Worker Info (0x10 - 0x1F)
     (global $OFFSET_CONCURRENCY                    i32 (i32.const 16))
@@ -158,15 +157,22 @@
     (global $OFFSET_ACTIVE_WORKERS                 i32 (i32.const 24))
     (global $OFFSET_LOCKED_WORKERS                 i32 (i32.const 28))
 
+    (global $INDEX_ACTIVE_WORKERS                  i32 (i32.const 6))
+    (global $INDEX_LOCKED_WORKERS                  i32 (i32.const 7))
+
+
     ;; Block 2: Control Info (0x20 - 0x2F)
     (global $OFFSET_FUNC_INDEX                     i32 (i32.const 32)) ;; 0x20
     (global $OFFSET_STRIDE                         i32 (i32.const 36)) ;; 0x24
     (global $OFFSET_WORKER_MUTEX                   i32 (i32.const 40)) ;; 0x28
-    (global $OFFSET_WORKER_INDEX_COUNTER           i32 (i32.const 44)) ;; 0x2C44
+    (global $OFFSET_WINDOW_MUTEX                   i32 (i32.const 44)) ;; 0x2C
+
+    (global $INDEX_WORKER_MUTEX                    i32 (i32.const 10)) ;; 0x28
+    (global $INDEX_WINDOW_MUTEX                    i32 (i32.const 11)) ;; 0x2C
 
     ;; Block 3: Task State Vector (0x30 - 0x3F) -> 48
     (global $OFFSET_TASK_VECTOR                    i32 (i32.const 48))
-    (global $OFFSET_BUFFER_SIZE                    i32 (i32.const 48))
+    (global $OFFSET_BUFFER_LEN                     i32 (i32.const 48))
     (global $OFFSET_SOURCE_PTR                     i32 (i32.const 52))
     (global $OFFSET_VALUES_PTR                     i32 (i32.const 56))
     (global $OFFSET_TARGET_PTR                     i32 (i32.const 60))
@@ -176,10 +182,10 @@
     (global $LENGTH_MALLOC_HEADERS                 i32 (i32.const 16)) 
 
     ;; Malloc Header Offsets (Relative to Data Pointer)
-    (global $OFFSET_HEAD_TYPE                      i32 (i32.const -16))
-    (global $OFFSET_HEAD_COUNT                     i32 (i32.const -12))
-    (global $OFFSET_HEAD_SIZE                      i32 (i32.const -8))
-    (global $OFFSET_HEAD_ALIGNED                   i32 (i32.const -4))
+    (global $OFFSET_ARRAY_TYPE                     i32 (i32.const -16))
+    (global $OFFSET_USED_BYTES                     i32 (i32.const -12))
+    (global $OFFSET_BYTELENGTH                     i32 (i32.const -8))
+    (global $OFFSET_ITEM_COUNT                     i32 (i32.const -4))
 
     ;; Legacy / Helper
     (global $SINGLE_VALUE                          i32 (i32.const 4))
@@ -189,4 +195,9 @@
     (global $HALF_OF_BITS                          i32 (i32.const 300))
     (global $SIGNED                                i32 (i32.const 2))
     (global $UNSIGNED                              i32 (i32.const 3))
-)
+
+    (global $TYPE_DATAVIEW                         i32 (i32.const 1))
+    (global $TYPE_UINT8ARRAY                       i32 (i32.const 2))
+    (global $TYPE_UINT16ARRAY                      i32 (i32.const 3))
+    (global $TYPE_UINT32ARRAY                      i32 (i32.const 4))
+    (global $TYPE_FLOAT32ARRAY                     i32 (i32.const 5))

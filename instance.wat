@@ -1,7 +1,7 @@
 (module
     (memory 10 10)
     
-    (data $wasm:mem   "wasm://mem.wat")
+    (data $wasm:memory   "wasm://memory.wat")
 
     (global $promise mut extern)
     (global $resolve mut extern)
@@ -10,18 +10,21 @@
     
     (global $HURRA mut extern)
 
-    (func (export "start") 
-        (param $options              <Object>) 
-        (result $promise            <Promise>)
-        (local $promise/resolvers    <Object>)
+    (func 
+        (export "start") 
+        (param  $options              <Object>) 
+        (result $promise             <Promise>)
+        (local  $promise/resolvers    <Object>)
 
-        (local.set $promise/resolvers Promise.withResolvers())
+        (local.set $promise/resolvers 
+            $self.Promise.withResolvers<>ref()
+        )
         
-        (global.set $options Object.assign(global($options) Object(local($options))))
-        (global.set $promise Reflect.get(local($promise/resolvers) text('promise')))
-        (global.set $resolve Reflect.get(local($promise/resolvers) text('resolve')))        
+        (global.set $options $self.Object.assign<ref.ref>ref(global($options) Object(local($options))))
+        (global.set $promise $self.Reflect.get<ref.ref>ref(local($promise/resolvers) text('promise')))
+        (global.set $resolve $self.Reflect.get<ref.ref>ref(local($promise/resolvers) text('resolve')))        
 
-        $wasm:mem<fun>(
+        $wasm:memory<fun>(
             func($on_memory_instance_start)
         )
 
@@ -31,12 +34,13 @@
 
     (func $on_memory_instance_ready
         (param $HURRA           <Object>)
+
         (global.set $HURRA local($HURRA))
 
-        $self.Reflect.apply<refx3>(
+        $self.Reflect.apply<ref.ref.ref>(
             global($resolve) 
             global($promise) 
-            Array.of(
+            $self.Array.of<ref>ref(
                 global($HURRA)
             )
         )
@@ -50,21 +54,22 @@
         (local $buffer      <SharedArrayBuffer>)
         (local $start                <Function>)
 
-        local($exports Reflect.get(local($instance) text("exports")))
-        local($memory  Reflect.get(local($exports)  text("memory")))
-        local($buffer  Reflect.get(local($memory)   text("buffer")))
-        local($start   Reflect.get(local($exports)  text("start")))
+        local($exports $self.Reflect.get<ref.ref>ref(local($instance) text("exports")))
+        local($memory  $self.Reflect.get<ref.ref>ref(local($exports)  text("memory")))
+        local($buffer  $self.Reflect.get<ref.ref>ref(local($memory)   text("buffer")))
+        local($start   $self.Reflect.get<ref.ref>ref(local($exports)  text("start")))
 
-        Reflect.set(
-            Reflect.get(local($exports) text('buffer')) text("value") 
-            Reflect.get(local($memory) text('buffer'))
+        $self.Reflect.set<ref.ref.ref>(
+            $self.Reflect.get<ref.ref>ref(local($exports) text('buffer')) 
+            text("value") 
+            $self.Reflect.get<ref.ref>ref(local($memory) text('buffer'))
         )
 
-        Reflect.set(global($options) text('memory') local($memory))
-        Reflect.set(global($options) text('buffer') local($buffer))
+        $self.Reflect.set<ref.ref.ref>(global($options) text('memory') local($memory))
+        $self.Reflect.set<ref.ref.ref>(global($options) text('buffer') local($buffer))
 
         (; call memory init function with callback ;)
-        $self.Reflect.apply<refx3>(
+        $self.Reflect.apply<ref.ref.ref>(
             local($start)
             null
             $self.Array.of<ref.fun>ref(
