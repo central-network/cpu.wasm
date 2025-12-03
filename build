@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 cd src
-wat4wasm window.wat --enable-threads --enable-multi-memory --debug-names --compiler wat2wasm
+wat4wasm window.wat --enable-threads --no-unlink --compiler wat2wasm
 mv window.wasm ../cpu.wasm
+mv window.wat4wasm.wat ../cpu.wat
+rm worker.wat4wasm.wat
 cd..
