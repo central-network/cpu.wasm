@@ -16,7 +16,7 @@
     (global $kSymbol.tag 'kArrayType')
     (global $worker.code 'onmessage = e => Object.assign(self,e.data).WebAssembly.instantiate($,self)')
 
-    (global $DEFAULT_MEMORY_INITIAL     i32 i32(10))
+    (global $DEFAULT_MEMORY_INITIAL     i32 i32(65535))
     (global $DEFAULT_MEMORY_MAXIMUM  i32 i32(65535))
     (global $DEFAULT_MEMORY_SHARED         i32 true)
 

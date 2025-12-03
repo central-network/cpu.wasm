@@ -1,7 +1,7 @@
 
     (table $func 30 funcref)
 
-    (type $math     
+    (type $arg3     
         (func 
             (param $source externref) 
             (param $values externref) 
@@ -9,32 +9,40 @@
             (result $promise <Promise>)
         )
     )
+
+    (type $arg2     
+        (func 
+            (param $source externref) 
+            (param $target externref) 
+            (result $promise <Promise>)
+        )
+    )
     
-    (func $add      (export "add")     (type $math) (call $calc global($OP_ADD)     local(0) local(1) local(2)))
-    (func $sub      (export "sub")     (type $math) (call $calc global($OP_SUB)     local(0) local(1) local(2)))
-    (func $mul      (export "mul")     (type $math) (call $calc global($OP_MUL)     local(0) local(1) local(2)))
-    (func $div      (export "div")     (type $math) (call $calc global($OP_DIV)     local(0) local(1) local(2)))
-    (func $max      (export "max")     (type $math) (call $calc global($OP_MAX)     local(0) local(1) local(2)))
-    (func $min      (export "min")     (type $math) (call $calc global($OP_MIN)     local(0) local(1) local(2)))
-    (func $eq       (export "eq")      (type $math) (call $calc global($OP_EQ)      local(0) local(1) local(2)))
-    (func $ne       (export "ne")      (type $math) (call $calc global($OP_NE)      local(0) local(1) local(2)))
-    (func $lt       (export "lt")      (type $math) (call $calc global($OP_LT)      local(0) local(1) local(2)))
-    (func $gt       (export "gt")      (type $math) (call $calc global($OP_GT)      local(0) local(1) local(2)))
-    (func $le       (export "le")      (type $math) (call $calc global($OP_LE)      local(0) local(1) local(2)))
-    (func $ge       (export "ge")      (type $math) (call $calc global($OP_GE)      local(0) local(1) local(2)))
-    (func $floor    (export "floor")   (type $math) (call $calc global($OP_FLOOR)   local(0)     null local(1)))
-    (func $trunc    (export "trunc")   (type $math) (call $calc global($OP_TRUNC)   local(0)     null local(1)))
-    (func $ceil     (export "ceil")    (type $math) (call $calc global($OP_CEIL)    local(0)     null local(1)))
-    (func $nearest  (export "nearest") (type $math) (call $calc global($OP_NEAREST) local(0)     null local(1)))
-    (func $sqrt     (export "sqrt")    (type $math) (call $calc global($OP_SQRT)    local(0)     null local(1)))
-    (func $abs      (export "abs")     (type $math) (call $calc global($OP_ABS)     local(0)     null local(1)))
-    (func $neg      (export "neg")     (type $math) (call $calc global($OP_NEG)     local(0)     null local(1)))
-    (func $and      (export "and")     (type $math) (call $calc global($OP_AND)     local(0) local(1) local(2)))
-    (func $or       (export "or")      (type $math) (call $calc global($OP_OR)      local(0) local(1) local(2)))
-    (func $xor      (export "xor")     (type $math) (call $calc global($OP_XOR)     local(0) local(1) local(2)))
-    (func $not      (export "not")     (type $math) (call $calc global($OP_NOT)     local(0) local(1) local(2)))
-    (func $shl      (export "shl")     (type $math) (call $calc global($OP_SHL)     local(0) local(1) local(2)))
-    (func $shr      (export "shr")     (type $math) (call $calc global($OP_SHR)     local(0) local(1) local(2)))
+    (func $add      (export "add")     (type $arg3) (call $calc global($OP_ADD)     local(0) local(1) local(2)))
+    (func $sub      (export "sub")     (type $arg3) (call $calc global($OP_SUB)     local(0) local(1) local(2)))
+    (func $mul      (export "mul")     (type $arg3) (call $calc global($OP_MUL)     local(0) local(1) local(2)))
+    (func $div      (export "div")     (type $arg3) (call $calc global($OP_DIV)     local(0) local(1) local(2)))
+    (func $max      (export "max")     (type $arg3) (call $calc global($OP_MAX)     local(0) local(1) local(2)))
+    (func $min      (export "min")     (type $arg3) (call $calc global($OP_MIN)     local(0) local(1) local(2)))
+    (func $eq       (export "eq")      (type $arg3) (call $calc global($OP_EQ)      local(0) local(1) local(2)))
+    (func $ne       (export "ne")      (type $arg3) (call $calc global($OP_NE)      local(0) local(1) local(2)))
+    (func $lt       (export "lt")      (type $arg3) (call $calc global($OP_LT)      local(0) local(1) local(2)))
+    (func $gt       (export "gt")      (type $arg3) (call $calc global($OP_GT)      local(0) local(1) local(2)))
+    (func $le       (export "le")      (type $arg3) (call $calc global($OP_LE)      local(0) local(1) local(2)))
+    (func $ge       (export "ge")      (type $arg3) (call $calc global($OP_GE)      local(0) local(1) local(2)))
+    (func $floor    (export "floor")   (type $arg2) (call $calc global($OP_FLOOR)   local(0)     null local(1)))
+    (func $trunc    (export "trunc")   (type $arg2) (call $calc global($OP_TRUNC)   local(0)     null local(1)))
+    (func $ceil     (export "ceil")    (type $arg2) (call $calc global($OP_CEIL)    local(0)     null local(1)))
+    (func $nearest  (export "nearest") (type $arg2) (call $calc global($OP_NEAREST) local(0)     null local(1)))
+    (func $sqrt     (export "sqrt")    (type $arg2) (call $calc global($OP_SQRT)    local(0)     null local(1)))
+    (func $abs      (export "abs")     (type $arg2) (call $calc global($OP_ABS)     local(0)     null local(1)))
+    (func $neg      (export "neg")     (type $arg2) (call $calc global($OP_NEG)     local(0)     null local(1)))
+    (func $and      (export "and")     (type $arg3) (call $calc global($OP_AND)     local(0) local(1) local(2)))
+    (func $or       (export "or")      (type $arg3) (call $calc global($OP_OR)      local(0) local(1) local(2)))
+    (func $xor      (export "xor")     (type $arg3) (call $calc global($OP_XOR)     local(0) local(1) local(2)))
+    (func $not      (export "not")     (type $arg3) (call $calc global($OP_NOT)     local(0) local(1) local(2)))
+    (func $shl      (export "shl")     (type $arg3) (call $calc global($OP_SHL)     local(0) local(1) local(2)))
+    (func $shr      (export "shr")     (type $arg3) (call $calc global($OP_SHR)     local(0) local(1) local(2)))
 
     (global $target/userView mut extern)
     (global $target/mallocView mut extern)
@@ -44,7 +52,7 @@
         (param  $userView ref)
         (param  $sourceView ref)
         (param  $isntTarget i32)
-        (result $offset_ptr i32)
+        (result $view ref)
         
         (local  $mallocView ref)
         (local  $isNotArray i32)
@@ -88,7 +96,7 @@
                 local($userView).buffer global($buffer) 
             )
             (then
-                (return local($userView).byteOffset)
+                (return local($userView))
             )
         )
 
@@ -115,7 +123,7 @@
             )
         )
 
-        local($mallocView).byteOffset
+        local($mallocView)
     )
 
     (func $is_mixed_space<i32.i32.i32>i32
@@ -128,7 +136,13 @@
             (then (return true))
         )
 
-        (return (i32.ne local($type_space) (call $get_array_type<i32>i32 local($values_ptr))))
+        (if local($values_ptr)
+            (then
+                (return (i32.ne local($type_space) (call $get_array_type<i32>i32 local($values_ptr))))
+            )
+        )
+
+        (return false)
     )
 
     (func $find_variant_code<i32.i32>i32
@@ -185,31 +199,37 @@
             )
         )
 
-        (local.set $values_len
-            (call $get_used_bytes<i32>i32 
-                local($values_ptr)
+        (if local($values_ptr)
+            (then
+                (local.set $values_len
+                    (call $get_used_bytes<i32>i32 
+                        local($values_ptr)
+                    )
+                )
+
+                (local.set $variant_code  
+                    (call $find_variant_code<i32.i32>i32 
+                        local($buffer_len)
+                        local($values_len)
+                    )
+                )
+            )
+            (else
+                (local.set $variant_code
+                    global($VARIANT_0)
+                )   
             )
         )
 
-        (local.set $variant_code  
-            (call $find_variant_code<i32.i32>i32 
-                local($buffer_len)
-                local($values_len)
-            )
-        )
         
         (local.set $func_index
-            (i32.or
-                (i32.shl local($opcode) global($SHIFT_OP))
-                (i32.or
-                    (i32.shl local($type_space) global($SHIFT_TYPE))
-                    local($variant_code)
-                )
-            )
+            (call $fni local($opcode) local($type_space) local($variant_code))
         )
 
         local($func_index)
     )
+
+    (global $isBusy mut i32)
 
     (func $calc
         (param  $opcode               i32)
@@ -221,17 +241,32 @@
         (local  $source_ptr           i32)
         (local  $values_ptr           i32)
         (local  $target_ptr           i32)
-        (local  $promise        <Promise>)
         (local  $buffer_len           i32)
         (local  $func_index           i32)
 
-        (local.set $source_ptr (call $import local($source) null true))
-        (local.set $values_ptr (call $import local($values) local($source) true))
-        (local.set $target_ptr (call $import local($target) local($source) false))
+        (if global($isBusy) (then 
+            (error<ref> (new $self.Error<ref>ref text('CPU is busy')))
+            (unreachable)
+        ))
+
+        (global.set $isBusy true)
+
+        (local.set $source      (call $import local($source) null true))
+        (local.set $target      (call $import local($target) local($source) false))
+
+        (local.set $source_ptr  local($source).byteOffset)
+        (local.set $target_ptr  local($target).byteOffset)
+
+        (if (i32.eqz (ref.is_null local($values)))
+            (then
+                (local.set $values      (call $import local($values) local($source) true))
+                (local.set $values_ptr  local($values).byteOffset)
+            )
+        )
 
         (local.set $buffer_len
-            (call $get_used_bytes<i32>i32 
-                local($target_ptr)
+            (call $get_used_bytes<ref>i32 
+                local($target)
             )
         )
 
@@ -268,6 +303,8 @@
     )
 
     (func $ontaskcomplete<>
+        (global.set $isBusy false)
+    
         (if global($target/needsUpdate)
             (then
                 (apply $self.TypedArray:set<ref>

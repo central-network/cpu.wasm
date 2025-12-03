@@ -56,6 +56,7 @@
             )
         )
 
+
         (call $set_bytelength<i32.i32> local($offset) local($byteLength))
         (call $set_used_bytes<i32.i32> local($offset) local($usedBytes))
 

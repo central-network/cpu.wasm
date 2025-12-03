@@ -1,5 +1,5 @@
 (module
-    (import "self" "memory" (memory $memory 10 65535 shared))
+    (import "self" "memory" (memory $memory 65535 65535 shared))
     (import "self" "close" (func $close))
 
     (include "shared.wat")

@@ -81,64 +81,19 @@
     ;; ------------------------------------------------------------------------------------------------------------
     
     ;; ADD (OP=1) -> 128
-    (global $f32v_add_n                            i32 (i32.const 137)) ;; 128 + 8 + 1
-    (global $f32v_add_1                            i32 (i32.const 138)) ;; 128 + 8 + 2
-
-    ;; SUB (OP=2) -> 256
-    (global $f32v_sub_n                            i32 (i32.const 265)) ;; 256 + 8 + 1
-    (global $f32v_sub_1                            i32 (i32.const 266)) ;; 256 + 8 + 2
-
-    ;; MUL (OP=3) -> 384
-    (global $f32v_mul_n                            i32 (i32.const 393)) ;; 384 + 8 + 1
-    (global $f32v_mul_1                            i32 (i32.const 394)) ;; 384 + 8 + 2
-
-    ;; DIV (OP=4) -> 512
-    (global $f32v_div_n                            i32 (i32.const 521)) ;; 512 + 8 + 1
-    (global $f32v_div_1                            i32 (i32.const 522)) ;; 512 + 8 + 2
-
-    ;; MAX (OP=5) -> 640
-    (global $f32v_max_n                            i32 (i32.const 649))
-    (global $f32v_max_1                            i32 (i32.const 650))
-
-    ;; MIN (OP=6) -> 768
-    (global $f32v_min_n                            i32 (i32.const 777))
-    (global $f32v_min_1                            i32 (i32.const 778))
-
-    ;; EQ (OP=7) -> 896
-    (global $f32v_eq_n                             i32 (i32.const 905))
-    (global $f32v_eq_1                             i32 (i32.const 906))
-
-    ;; NE (OP=8) -> 1024
-    (global $f32v_ne_n                             i32 (i32.const 1033))
-    (global $f32v_ne_1                             i32 (i32.const 1034))
-
-    ;; LT (OP=9) -> 1152
-    (global $f32v_lt_n                             i32 (i32.const 1161))
-    (global $f32v_lt_1                             i32 (i32.const 1162))
-
-    ;; GT (OP=10) -> 1280
-    (global $f32v_gt_n                             i32 (i32.const 1289))
-    (global $f32v_gt_1                             i32 (i32.const 1290))
-
-    ;; LE (OP=11) -> 1408
-    (global $f32v_le_n                             i32 (i32.const 1417))
-    (global $f32v_le_1                             i32 (i32.const 1418))
-
-    ;; GE (OP=12) -> 1536
-    (global $f32v_ge_n                             i32 (i32.const 1545))
-    (global $f32v_ge_1                             i32 (i32.const 1546))
-
-    ;; FLOOR (OP=13) -> 1664
-    (global $f32v_floor_0                          i32 (i32.const 1675)) ;; 1664 + 8 + 3
-
-    ;; TRUNC (OP=14) -> 1792
-    (global $f32v_trunc_0                          i32 (i32.const 1803)) ;; 1792 + 8 + 3
-
-    ;; CEIL (OP=15) -> 1920
-    (global $f32v_ceil_0                           i32 (i32.const 1931)) ;; 1920 + 8 + 3
-
-    ;; NEAREST (OP=16) -> 2048
-    (global $f32v_nearest_0                        i32 (i32.const 2059)) ;; 2048 + 8 + 3
+    (func $fni
+        (param $opcode i32)
+        (param $type_space i32)
+        (param $variant_code i32)
+        (result i32)
+        (i32.or
+            (i32.shl local($opcode) global($SHIFT_OP))
+            (i32.or
+                (i32.shl local($type_space) global($SHIFT_TYPE))
+                local($variant_code)
+            )
+        )
+    )
 
     ;; ------------------------------------------------------------------------------------------------------------
     ;; MEMORY OFFSETS (64-Byte Header)
@@ -204,3 +159,5 @@
     (global $READY_STATE_ERROR                     i32 (i32.const 4))
     (global $READY_STATE_BUSY                      i32 (i32.const 5))
     (global $READY_STATE_IDLE                      i32 (i32.const 6))
+
+    
