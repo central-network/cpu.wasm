@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Benchmark: SIMD vs JS</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        h1,
+        h2 {
+            color: #00d9ff;
+        }
+
+        .result {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-family: monospace;
+        }
+
+        .shared {
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .local {
+            border-left: 4px solid #51cf66;
+        }
+
+        .winner {
+            background: rgba(81, 207, 102, 0.2);
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(90deg, #00b894, #00d9ff);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+
+        #log {
+            background: #111;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔬 Memory Benchmark: SIMD vs JS (Only Add)</h1>
+    <p>64MB, ~16M floats, only ONE add operation per element</p>
+
+    <div class="section">
+        <h2>JavaScript (Float32Array) - 1 float at a time</h2>
+        <button id="runJS">▶️ Run JS</button>
+        <button id="runJS10">🔁 Run 10x</button>
+        <div id="jsResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>WASM SIMD (f32x4) - 4 floats at a time</h2>
+        <button id="runWASM">▶️ Run WASM</button>
+        <button id="runWASM10">🔁 Run 10x</button>
+        <div id="wasmResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>WASM SIMD: Read LOCAL → Write SHARED (no copy)</h2>
+        <button id="runHybrid">▶️ Run Hybrid</button>
+        <div id="hybridResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>WASM SIMD Simple (i32 counter, no extract_lane)</h2>
+        <button id="runSimple">▶️ Run Simple SIMD</button>
+        <div id="simpleResults"></div>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const logDiv = document.getElementById('log');
+        function log(msg) {
+            logDiv.innerHTML += `${new Date().toLocaleTimeString()}: ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+
+
+        // Memories
+        const wasmSharedMemory = new WebAssembly.Memory({ initial: 1000, maximum: 65535, shared: true });
+        const wasmLocalMemory = new WebAssembly.Memory({ initial: 1000, maximum: 65535 });
+        const sharedView = new Float32Array(wasmSharedMemory.buffer);
+        const localView = new Float32Array(wasmLocalMemory.buffer);
+
+
+        const TOTAL_BYTES = sharedView.byteLength;
+        const TOTAL_FLOATS = sharedView.length;
+
+        log(`Buffer: ${(TOTAL_BYTES / 1024 / 1024).toFixed(1)} MB (${TOTAL_FLOATS.toLocaleString()} floats)`);
+
+        // ============================================================================
+        // JavaScript Benchmark - ONLY ADD, 1 float at a time
+        // ============================================================================
+
+        const adding_value = 1.00001;
+        const tcount = 100;
+
+        function jsBenchmarkShared() {
+            let f = TOTAL_FLOATS;
+            while (f--) {
+                sharedView[f] = sharedView[f] + adding_value;
+            }
+        }
+
+        function jsBenchmarkLocal() {
+            let f = TOTAL_FLOATS;
+            while (f--) {
+                localView[f] = localView[f] + adding_value;
+            }
+            sharedView.set(localView)
+        }
+
+        function jsBenchmarkHybrid() {
+            let f = TOTAL_FLOATS;
+            while (f--) {
+                sharedView[f] = localView[f] + adding_value;
+            }
+        }
+
+        function runJSBenchmark() {
+
+            let i;
+
+            log('JS on SHARED...');
+            const t1_start = performance.now();
+            i = tcount;
+            while (i--) jsBenchmarkShared();
+            const t_shared = performance.now() - t1_start;
+
+
+            log('JS on LOCAL + copy...');
+            const t2_start = performance.now();
+            i = tcount;
+            while (i--) jsBenchmarkLocal();
+            const t_local = performance.now() - t2_start;
+
+            log('JS on LOCAL -> SHARED...');
+            const t3_start = performance.now();
+            i = tcount;
+            while (i--) jsBenchmarkHybrid();
+            const t_hybrid = performance.now() - t3_start;
+
+            displayResults('jsResults', 'JS', t_shared, t_local, t_hybrid);
+            return { t_shared, t_local, t_hybrid };
+        }
+
+        // ============================================================================
+        // WASM SIMD Benchmark
+        // ============================================================================
+
+        let wasmInstance = null;
+
+        async function initWASM() {
+            log('Compiling WASM...');
+            const response = await fetch('benchmark.wasm');
+            const bytes = await response.arrayBuffer();
+
+            const imports = {
+                self: {
+                    local_memory: wasmLocalMemory,
+                    shared_memory: wasmSharedMemory,
+                    worker_index: 0
+                }
+            };
+
+            const module = await WebAssembly.compile(bytes);
+            wasmInstance = await WebAssembly.instantiate(module, imports);
+            log('WASM ready!');
+        }
+
+        async function runWASMBenchmark() {
+            if (!wasmInstance) await initWASM();
+
+            const exports = wasmInstance.exports;
+            let i;
+
+            log('WASM SIMD on SHARED...');
+            const t1_start = performance.now();
+            i = tcount;
+            while (i--) exports.benchmark_shared();
+            const t_shared = performance.now() - t1_start;
+
+            log('WASM SIMD on LOCAL + copy...');
+            const t2_start = performance.now();
+            i = tcount;
+            while (i--) exports.benchmark_local_then_copy();
+            const t_local = performance.now() - t2_start;
+
+            log('WASM SIMD on LOCAL -> SHARED...');
+            const t3_start = performance.now();
+            i = tcount;
+            while (i--) exports.benchmark_local_read_shared_write();
+            const t_hybrid = performance.now() - t3_start;
+
+            displayResults('wasmResults', 'WASM SIMD', t_shared, t_local, t_hybrid);
+            return { t_shared, t_local, t_hybrid };
+        }
+
+        // ============================================================================
+        // Helpers
+        // ============================================================================
+
+        function displayResults(elementId, label, t_shared, t_local, t_hybrid) {
+            const winner = t_shared < t_local ? 'shared' : 'local';
+            const speedup = winner === 'local'
+                ? (t_shared / t_local).toFixed(2)
+                : (t_local / t_shared).toFixed(2);
+
+            document.getElementById(elementId).innerHTML = `
+                <div class="result shared ${winner === 'shared' ? 'winner' : ''}">
+                    <strong>${label} SHARED:</strong> ${t_shared.toFixed(2)} ms
+                </div>
+                <div class="result local ${winner === 'local' ? 'winner' : ''}">
+                    <strong>${label} LOCAL + Copy:</strong> ${t_local.toFixed(2)} ms
+                </div>
+                <div class="result hybrid ${winner === 'hybrid' ? 'winner' : ''}">
+                    <strong>${label} LOCAL -> SHARED:</strong> ${t_hybrid.toFixed(2)} ms
+                </div>
+                <div class="result">Winner: ${winner.toUpperCase()} (${speedup}x)
+                </div>
+            `;
+            log(`${label}: Shared ${t_shared.toFixed(2)}ms | Local ${t_local.toFixed(2)}ms | Hybrid ${t_hybrid.toFixed(2)}ms`);
+        }
+
+        async function runMultiple(fn, elementId, label, runs = 10) {
+            let total_shared = 0, total_local = 0;
+            for (let r = 0; r < runs; r++) {
+                log(`${label} Run ${r + 1}/${runs}`);
+                const result = await fn();
+                total_shared += result.t_shared;
+                total_local += result.t_local;
+                await new Promise(r => setTimeout(r, 50));
+            }
+            const avg_shared = total_shared / runs;
+            const avg_local = total_local / runs;
+            const winner = avg_shared < avg_local ? 'shared' : 'local';
+            const speedup = winner === 'local'
+                ? (avg_shared / avg_local).toFixed(2)
+                : (avg_local / avg_shared).toFixed(2);
+
+            document.getElementById(elementId).innerHTML = `
+                <h3>Average (${runs} runs):</h3>
+                <div class="result shared ${winner === 'shared' ? 'winner' : ''}">
+                    <strong>${label} SHARED:</strong> ${avg_shared.toFixed(2)} ms
+                </div>
+                <div class="result local ${winner === 'local' ? 'winner' : ''}">
+                    <strong>${label} LOCAL + Copy:</strong> ${avg_local.toFixed(2)} ms
+                </div>
+                <div class="result">Winner: ${winner.toUpperCase()} (${speedup}x)
+                </div>
+            `;
+            log(`=== ${label} AVG: Shared ${avg_shared.toFixed(2)}ms | Local ${avg_local.toFixed(2)}ms ===`);
+        }
+
+        async function runHybridBenchmark() {
+            if (!wasmInstance) await initWASM();
+
+            const exports = wasmInstance.exports;
+
+            log('WASM SIMD: Read LOCAL → Write SHARED...');
+            const t_start = performance.now();
+            i = tcount;
+            while (i--) exports.benchmark_local_read_shared_write();
+            const t_elapsed = performance.now() - t_start;
+
+            document.getElementById('hybridResults').innerHTML = `
+                <div class="result">
+                    <strong>Read LOCAL → Write SHARED:</strong> ${t_elapsed.toFixed(2)} ms
+                </div>
+            `;
+            log(`Hybrid: ${t_elapsed.toFixed(2)}ms`);
+        }
+
+        async function runSimpleBenchmark() {
+            if (!wasmInstance) await initWASM();
+
+            const exports = wasmInstance.exports;
+            let i;
+
+            log('WASM SIMD Simple (i32 counter)...');
+            const t_start = performance.now();
+            i = tcount;
+            while (i--) exports.benchmark_shared_simple();
+            const t_elapsed = performance.now() - t_start;
+
+            document.getElementById('simpleResults').innerHTML = `
+                <div class="result">
+                    <strong>Simple SIMD (i32):</strong> ${t_elapsed.toFixed(2)} ms
+                </div>
+            `;
+            log(`Simple SIMD: ${t_elapsed.toFixed(2)}ms`);
+        }
+
+        document.getElementById('runJS').addEventListener('click', runJSBenchmark);
+        document.getElementById('runJS10').addEventListener('click', () => runMultiple(runJSBenchmark, 'jsResults', 'JS'));
+        document.getElementById('runWASM').addEventListener('click', runWASMBenchmark);
+        document.getElementById('runWASM10').addEventListener('click', () => runMultiple(runWASMBenchmark, 'wasmResults', 'WASM SIMD'));
+        document.getElementById('runHybrid').addEventListener('click', runHybridBenchmark);
+        document.getElementById('runSimple').addEventListener('click', runSimpleBenchmark);
+
+        initWASM();
+    </script>
+</body>
+
+</html>

@@ -1,5 +1,7 @@
 (module
     (import "env" "memory" (memory 10 10 shared))
+    (import "env" "worker_index" (global $worker_index i32))
+    (import "env" "performance_now" (func $performance_now (result f32)))
 
     ;; ============================================================================================================
     ;; TASK EXECUTION MODULE (chain_task.wat)

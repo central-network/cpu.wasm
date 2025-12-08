@@ -91,16 +91,19 @@ async function init() {
         const workerCode = `
 onmessage = async (e) => {
     const { memory, workerModule, taskModule, id, chainPtr } = e.data;
+    
     try {
         const taskInstance = await WebAssembly.instantiate(taskModule, {
-             env: { memory: memory } 
+             env: { memory: memory, id: id, performance_now: performance.now.bind(performance), } 
         });
+
         const workerInstance = await WebAssembly.instantiate(workerModule, {
-            env: { memory: memory },
+            env: { memory: memory, id: id, performance_now: performance.now.bind(performance), },
             task: { execute_task: taskInstance.exports.execute_task }
+
         });
         if (workerInstance.exports.start) {
-            workerInstance.exports.start(id, performance.now(), chainPtr);
+            workerInstance.exports.start(id, chainPtr);
         }
     } catch (err) {
         console.error(\`Worker \${id} Error:\`, err);

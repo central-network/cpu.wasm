@@ -57,7 +57,7 @@ onmessage = async (e) => {
 
     try {
         const instance = await WebAssembly.instantiate(module, {
-            env: { memory: memory } 
+            env: { memory: memory,  } 
         });
         
         console.log(\`Worker \${id} Starting...\`);

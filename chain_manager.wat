@@ -29,6 +29,78 @@
     (global $OFFSET_TASK_ATOMIC_COUNTER     i32 (i32.const 4))
 
     ;; ------------------------------------------------------------------------------------------------------------
+    ;; CHAIN REGISTRY (Global at offset 0x1000 = 4096)
+    ;; ------------------------------------------------------------------------------------------------------------
+    ;; Tracks all allocated chains so workers can discover them.
+    ;; Structure:
+    ;; - [0x00] CHAIN_COUNT (i32): Number of registered chains
+    ;; - [0x04] CHAIN_PTRS[16] (i32 array): Pointers to chain blocks
+
+    (global $CHAIN_REGISTRY_BASE            i32 (i32.const 4096))   ;; 0x1000
+    (global $CHAIN_REGISTRY_MAX             i32 (i32.const 16))     ;; Max chains
+    (global $OFFSET_CHAIN_COUNT             i32 (i32.const 0))
+    (global $OFFSET_CHAIN_PTRS              i32 (i32.const 4))
+
+    ;; ------------------------------------------------------------------------------------------------------------
+    ;; CHAIN REGISTRY FUNCTIONS
+    ;; ------------------------------------------------------------------------------------------------------------
+
+    ;; Get number of registered chains
+    (func $get_chain_count (export "get_chain_count")
+        (result i32)
+        (i32.load (global.get $CHAIN_REGISTRY_BASE))
+    )
+
+    ;; Get chain pointer at index
+    (func $get_chain_ptr (export "get_chain_ptr")
+        (param $index i32)
+        (result i32)
+        (i32.load
+            (i32.add
+                (i32.add (global.get $CHAIN_REGISTRY_BASE) (global.get $OFFSET_CHAIN_PTRS))
+                (i32.mul (local.get $index) (i32.const 4))
+            )
+        )
+    )
+
+    ;; Register a new chain, returns index (-1 if full)
+    (func $register_chain (export "register_chain")
+        (param $chain_ptr i32)
+        (result i32)
+        
+        (local $count i32)
+        (local $slot_ptr i32)
+        
+        ;; Get current count
+        (local.set $count (i32.load (global.get $CHAIN_REGISTRY_BASE)))
+        
+        ;; Check if full
+        (if (i32.ge_u (local.get $count) (global.get $CHAIN_REGISTRY_MAX))
+            (then (return (i32.const -1)))
+        )
+        
+        ;; Calculate slot pointer
+        (local.set $slot_ptr
+            (i32.add
+                (i32.add (global.get $CHAIN_REGISTRY_BASE) (global.get $OFFSET_CHAIN_PTRS))
+                (i32.mul (local.get $count) (i32.const 4))
+            )
+        )
+        
+        ;; Store chain pointer
+        (i32.store (local.get $slot_ptr) (local.get $chain_ptr))
+        
+        ;; Increment count
+        (i32.store 
+            (global.get $CHAIN_REGISTRY_BASE) 
+            (i32.add (local.get $count) (i32.const 1))
+        )
+        
+        ;; Return index
+        (local.get $count)
+    )
+
+    ;; ------------------------------------------------------------------------------------------------------------
     ;; CHAIN INITIALIZATION
     ;; ------------------------------------------------------------------------------------------------------------
     

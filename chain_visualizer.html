@@ -352,13 +352,20 @@
                     onmessage = async (e) => {
                         const { memory, workerModule, taskModule, id, chainPtr } = e.data;
                         try {
-                            const taskInstance = await WebAssembly.instantiate(taskModule, { env: { memory } });
+                            const env = { 
+                                memory, 
+                                worker_index: id, 
+                                performance_now: performance.now.bind(performance) 
+                            };
+
+                            const taskInstance = await WebAssembly.instantiate(taskModule, {env});
+                            
                             const workerInstance = await WebAssembly.instantiate(workerModule, {
-                                env: { memory },
-                                task: { execute_task: taskInstance.exports.execute_task }
+                                env, task: { execute_task: taskInstance.exports.execute_task }
                             });
+
                             if (workerInstance.exports.start) {
-                                workerInstance.exports.start(id, performance.now(), chainPtr);
+                                workerInstance.exports.start(id, chainPtr);
                             }
                         } catch (err) {
                             console.error('Worker ' + id + ' Error:', err);
